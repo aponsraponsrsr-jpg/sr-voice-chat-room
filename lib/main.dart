@@ -1,327 +1,206 @@
-// SR VOICE CHAT ROOM V3 FINAL - OWNER: aponsraponsrsr@gmail.com
 import 'package:flutter/material.dart';
 import 'dart:math';
 
-void main() => runApp(SRVoiceApp());
+void main() => runApp(SRVoiceV4());
 
-class SRVoiceApp extends StatelessWidget {
+class SRVoiceV4 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SR Voice Chat Room',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(),
-      home: LoginScreen(),
-    );
-  }
-}
-
-class UserModel {
-  String gmail, name, photo;
-  int coins;
-  bool isOwner, isAdmin;
-  UserModel({
-    required this.gmail,
-    required this.name,
-    required this.photo,
-    this.coins = 0,
-    this.isOwner = false,
-    this.isAdmin = false,
-  });
-}
-
-class MicSeat {
-  int id;
-  UserModel? user;
-  MicSeat({required this.id, this.user});
-}
-
-class LoginScreen extends StatefulWidget {
-  @override
-  _LoginScreenState createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-  List<String> phoneGmails = [
-    'aponsraponsrsr@gmail.com',
-    'srvoice.official@gmail.com',
-    'owner.srvoice@gmail.com',
-    'test.user1@gmail.com',
-    'test.user2@gmail.com',
-  ];
-
-  String OWNER_GMAIL = 'aponsraponsrsr@gmail.com';
-
-  void showGmailList() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Color(0xFF1E1E1E),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      title: 'SR Voice Chat',
+      theme: ThemeData(
+        primaryColor: Color(0xFF4A148C),
+        scaffoldBackgroundColor: Color(0xFF1A0B2E),
       ),
-      builder: (ctx) {
-        return Container(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              SizedBox(height: 15),
-              Text(
-                'ফোনের Gmail সিলেক্ট করুন',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 15),
-              ...phoneGmails.map((gmail) => ListTile(
-                leading: CircleAvatar(
-                  child: Text(gmail[0].toUpperCase()),
-                  backgroundColor: Colors.redAccent,
-                ),
-                title: Text(gmail),
-                subtitle: Text(
-                  gmail == OWNER_GMAIL ? 'OWNER - Unlimited Wallet' : 'User',
-                ),
-                trailing: gmail == OWNER_GMAIL
-                    ? Icon(Icons.verified, color: Colors.blue)
-                    : null,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  loginWithGmail(gmail);
-                },
-              )).toList(),
-            ],
-          ),
-        );
-      },
+      home: LoginPage(),
     );
   }
+}
 
-  void loginWithGmail(String gmail) {
-    bool isOwner = gmail == OWNER_GMAIL;
-    UserModel user = UserModel(
-      gmail: gmail,
-      name: isOwner ? 'SR Voice Owner' : 'User ${Random().nextInt(1000)}',
-      photo: 'https://i.pravatar.cc/150?u=$gmail',
-      coins: isOwner ? 1000000 : 5000,
-      isOwner: isOwner,
-      isAdmin: isOwner,
-    );
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => ChatRoomScreen(currentUser: user)),
-    );
-  }
-
+class LoginPage extends StatelessWidget {
+  final TextEditingController emailCtrl = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF121212),
+      backgroundColor: Color(0xFF1A0B2E),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.mic, size: 80, color: Colors.purpleAccent),
-            SizedBox(height: 15),
-            Text(
-              'SR Voice Chat Room',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Owner: aponsraponsrsr@gmail.com',
-              style: TextStyle(color: Colors.amber, fontSize: 12),
-            ),
-            SizedBox(height: 50),
-            GestureDetector(
-              onTap: showGmailList,
-              child: Container(
-                width: 280,
-                padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 120, height: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
+                  gradient: LinearGradient(colors: [Color(0xFF4A148C), Color(0xFFFFD700)]),
+                  shape: BoxShape.circle,
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.email, color: Colors.red),
-                    SizedBox(width: 10),
-                    Text(
-                      'Gmail দিয়ে Login',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                child: Icon(Icons.mic, size: 60, color: Colors.white),
+              ),
+              SizedBox(height: 20),
+              Text('SR VOICE', style: TextStyle(color: Color(0xFFFFD700), fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 2)),
+              Text('CHAT ROOM V4', style: TextStyle(color: Colors.white70, fontSize: 14)),
+              SizedBox(height: 40),
+              TextField(
+                controller: emailCtrl,
+                style: TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Enter Gmail (Owner: aponsraponsrsr@gmail.com)',
+                  hintStyle: TextStyle(color: Colors.white38),
+                  filled: true,
+                  fillColor: Color(0xFF2D1B4E),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
-            ),
-          ],
+              SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFFFFD700),
+                  foregroundColor: Color(0xFF4A148C),
+                  minimumSize: Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () {
+                  if(emailCtrl.text.isEmpty) return;
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => HomePage(email: emailCtrl.text.trim())));
+                },
+                child: Text('ENTER ROOM', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class ChatRoomScreen extends StatefulWidget {
-  final UserModel currentUser;
-  ChatRoomScreen({required this.currentUser});
+class HomePage extends StatefulWidget {
+  final String email;
+  HomePage({required this.email});
   @override
-  _ChatRoomScreenState createState() => _ChatRoomScreenState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _ChatRoomScreenState extends State<ChatRoomScreen> {
-  late List<MicSeat> seats;
-  String roomName = 'SR Voice Official Room';
-  String roomTheme = 'Dark';
-  Map<String, Color> themeColors = {
-    'Dark': Color(0xFF121212),
-    'Purple': Color(0xFF2D1B4E),
-    'Blue': Color(0xFF0F2C4D),
-    'Green': Color(0xFF1B4D2D),
-    'Red': Color(0xFF4D1B1B),
-    'Golden': Color(0xFF4D3D1B),
-  };
+class _HomePageState extends State<HomePage> {
+  bool get isOwner => widget.email == 'aponsraponsrsr@gmail.com';
+  int ownerCoins = 1000000;
+  int userCoins = 5000;
+  String groupName = 'SR Voice Chat Room';
+  String announcement = 'Welcome to SR Voice - No body come to my room';
+  String groupLabel = 'Friends';
+  List<String> seats = List.generate(10, (i) => i==0 ? 'Owner' : 'Empty');
 
-  @override
-  void initState() {
-    super.initState();
-    seats = List.generate(15, (i) => MicSeat(id: i + 1));
-    if (widget.currentUser.isOwner) {
-      seats[0].user = widget.currentUser;
-    }
-  }
+  String inviteCode = 'SR${Random().nextInt(9000)+1000}';
+  int myIncome = 0;
 
-  void sitOnSeat(int index) {
-    setState(() {
-      if (seats[index].user == null) {
-        seats[index].user = widget.currentUser;
-      } else if (seats[index].user!.gmail == widget.currentUser.gmail) {
-        seats[index].user = null;
-      }
-    });
-  }
-
-  void showProfile(UserModel user) {
-    bool isMe = user.gmail == widget.currentUser.gmail;
+  void showProfile(int index) {
+    bool isOwnerSeat = index==0;
+    int coins = isOwnerSeat ? ownerCoins : userCoins;
     showModalBottomSheet(
       context: context,
-      backgroundColor: Color(0xFF1E1E1E),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Container(
+      backgroundColor: Color(0xFF2D1B4E),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => Padding(
         padding: EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircleAvatar(
-              radius: 40,
-              backgroundImage: NetworkImage(user.photo),
-            ),
+            CircleAvatar(radius: 40, backgroundColor: Color(0xFFFFD700), child: Icon(Icons.person, size: 40, color: Color(0xFF4A148C))),
             SizedBox(height: 10),
-            Text(
-              user.name,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              user.gmail,
-              style: TextStyle(fontSize: 11, color: Colors.grey),
-            ),
-            if (user.isOwner)
-              Chip(
-                label: Text('OWNER - aponsraponsrsr'),
-                backgroundColor: Colors.amber,
-              ),
-            SizedBox(height: 15),
+            Text(isOwnerSeat ? 'SR Voice Owner' : 'User ${index+1}', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(widget.email, style: TextStyle(color: Colors.white54)),
+            if(isOwnerSeat) Container(margin: EdgeInsets.only(top: 6), padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Color(0xFFFFD700), borderRadius: BorderRadius.circular(10)), child: Text('OWNER - aponsraponsrsr', style: TextStyle(color: Color(0xFF4A148C), fontWeight: FontWeight.bold, fontSize: 12))),
+            SizedBox(height: 20),
+            // WALLET INSIDE ID
             Container(
-              padding: EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.white10,
-                borderRadius: BorderRadius.circular(10),
-              ),
+              padding: EdgeInsets.all(14),
+              decoration: BoxDecoration(color: Color(0xFF1A0B2E), borderRadius: BorderRadius.circular(12), border: Border.all(color: Color(0xFFFFD700).withOpacity(0.5))),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Wallet (ID এর ভিতরে)'),
-                      Icon(Icons.wallet, color: Colors.amber),
-                    ],
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    Text('Wallet', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    Text('Coins: $coins', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 16)),
+                  ]),
+                  if(isOwnerSeat) SizedBox(height: 10),
+                  if(isOwnerSeat) ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green, minimumSize: Size(double.infinity, 40)),
+                    onPressed: () {
+                      setState(() { ownerCoins += 100000; });
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('100000 Coin Added! Total: $ownerCoins')));
+                    },
+                    child: Text('+ Add Unlimited Coin'),
                   ),
+                ],
+              ),
+            ),
+            SizedBox(height: 14),
+            // INVITE INSIDE ID - YOU ASKED
+            Container(
+              padding: EdgeInsets.all(14),
+              decoration: BoxDecoration(color: Color(0xFF1A0B2E), borderRadius: BorderRadius.circular(12)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Invite Friend', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Coins:'),
-                      Text(
-                        '${user.coins}',
-                        style: TextStyle(
-                          color: Colors.amber,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (isMe && widget.currentUser.isOwner)
-                    ElevatedButton.icon(
-                      icon: Icon(Icons.add),
-                      label: Text('Add Unlimited Coin'),
-                      onPressed: () {
-                        setState(() => widget.currentUser.coins += 100000);
-                        Navigator.pop(ctx);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        minimumSize: Size(double.infinity, 45),
-                      ),
-                    ),
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    Text('My Income: $myIncome', style: TextStyle(color: Colors.white70)),
+                    Text('Code: $inviteCode', style: TextStyle(color: Color(0xFFFFD700))),
+                  ]),
+                  SizedBox(height: 8),
+                  Row(children: [
+                    Expanded(child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF4A148C)), onPressed: () { setState(() { myIncome += 100; }); Navigator.pop(context); }, child: Text('Share and invite friends'))),
+                    SizedBox(width: 8),
+                    ElevatedButton(onPressed: () {}, child: Text('Revenue Details')),
+                  ]),
+                  TextButton(onPressed: () {}, child: Text('Activity Rules', style: TextStyle(color: Colors.white54, fontSize: 12))),
                 ],
               ),
             ),
             SizedBox(height: 10),
-            if (isMe && widget.currentUser.isOwner)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  editGroup();
-                },
-                child: Text('Group Name Change (Only Owner)'),
-              ),
+            if(isOwner) ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFFFD700), foregroundColor: Color(0xFF4A148C), minimumSize: Size(double.infinity, 45)),
+              onPressed: () => showRoomSettings(),
+              child: Text('Group Name Change (Only Owner)'),
+            ),
           ],
         ),
       ),
     );
   }
 
-  void editGroup() {
-    TextEditingController c = TextEditingController(text: roomName);
+  void showRoomSettings() {
+    TextEditingController nameCtrl = TextEditingController(text: groupName);
+    TextEditingController annCtrl = TextEditingController(text: announcement);
+    String tempLabel = groupLabel;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Group Name'),
-        content: TextField(controller: c),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel'),
+      builder: (_) => StatefulBuilder(
+        builder: (context, setD) => AlertDialog(
+          backgroundColor: Color(0xFF2D1B4E),
+          title: Text('Room Set', style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: nameCtrl, style: TextStyle(color: Colors.white), decoration: InputDecoration(labelText: 'Room Name', labelStyle: TextStyle(color: Colors.white54))),
+              TextField(controller: annCtrl, style: TextStyle(color: Colors.white), decoration: InputDecoration(labelText: 'Room Announcement', labelStyle: TextStyle(color: Colors.white54))),
+              SizedBox(height: 10),
+              DropdownButton<String>(
+                value: tempLabel,
+                dropdownColor: Color(0xFF2D1B4E),
+                style: TextStyle(color: Colors.white),
+                items: ['Friends','Game','Music','Chat'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                onChanged: (v) => setD(() => tempLabel=v!),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() => roomName = c.text);
-              Navigator.pop(ctx);
-            },
-            child: Text('Save'),
-          ),
-        ],
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
+            TextButton(onPressed: () { setState(() { groupName=nameCtrl.text; announcement=annCtrl.text; groupLabel=tempLabel; }); Navigator.pop(context); Navigator.pop(context); }, child: Text('Save', style: TextStyle(color: Color(0xFFFFD700)))),
+          ],
+        ),
       ),
     );
   }
@@ -329,93 +208,74 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: themeColors[roomTheme],
+      backgroundColor: Color(0xFF1A0B2E),
       appBar: AppBar(
-        backgroundColor: Colors.black54,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('SR Voice Chat Room', style: TextStyle(fontSize: 14)),
-            Text(roomName, style: TextStyle(fontSize: 11)),
-          ],
-        ),
+        backgroundColor: Color(0xFF2D1B4E),
+        title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(groupName, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+          Text('ID: ${Random().nextInt(90000000)+10000000} | $groupLabel | $announcement', style: TextStyle(color: Colors.white54, fontSize: 10), overflow: TextOverflow.ellipsis),
+        ]),
         actions: [
-          GestureDetector(
-            onTap: () => showProfile(widget.currentUser),
-            child: Padding(
-              padding: EdgeInsets.only(right: 12),
-              child: CircleAvatar(
-                backgroundImage: NetworkImage(widget.currentUser.photo),
-              ),
-            ),
-          ),
+          IconButton(icon: Icon(Icons.keep, color: Colors.white), onPressed: () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Keep - Minimized')))),
+          IconButton(icon: Icon(Icons.exit_to_app, color: Colors.white), onPressed: () => Navigator.pop(context)),
         ],
       ),
       body: Column(
         children: [
+          // ROOM INFO BANNER
           Container(
-            padding: EdgeInsets.all(8),
-            color: Colors.black26,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Owner: aponsraponsrsr@gmail.com',
-                  style: TextStyle(fontSize: 10, color: Colors.amber),
-                ),
-                Text('15 Seats', style: TextStyle(fontSize: 10)),
-              ],
-            ),
+            margin: EdgeInsets.all(10),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF4A148C), Color(0xFF7B1FA2)]), borderRadius: BorderRadius.circular(12)),
+            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Text('All / Chat / Gift / Notice', style: TextStyle(color: Colors.white70, fontSize: 12)),
+              Text('10 Seats | Online: 1', style: TextStyle(color: Color(0xFFFFD700), fontSize: 12)),
+            ]),
           ),
           Expanded(
             child: GridView.builder(
-              padding: EdgeInsets.all(12),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                childAspectRatio: 0.85,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: 15,
+              padding: EdgeInsets.all(8),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5, childAspectRatio: 0.75, crossAxisSpacing: 8, mainAxisSpacing: 8),
+              itemCount: 10,
               itemBuilder: (ctx, i) {
-                var s = seats[i];
-                bool occ = s.user != null;
+                bool isOwnerSeat = i==0;
+                bool isEmpty = seats[i]=='Empty';
                 return GestureDetector(
-                  onTap: () => sitOnSeat(i),
-                  onLongPress: () => occ ? showProfile(s.user!) : null,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: occ ? Colors.white10 : Colors.white12,
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(
-                        color: occ ? Colors.purpleAccent : Colors.white24,
+                  onTap: () => showProfile(i),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 60, height: 60,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: isOwnerSeat ? LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA000)]) : null,
+                          color: isEmpty ? Color(0xFF2D1B4E) : Color(0xFF4A148C),
+                          border: Border.all(color: isOwnerSeat ? Color(0xFFFFD700) : Colors.white24, width: isOwnerSeat ? 3 : 1),
+                        ),
+                        child: Icon(isOwnerSeat ? Icons.mic : isEmpty ? Icons.chair : Icons.person, color: Colors.white, size: 28),
                       ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircleAvatar(
-                          radius: 26,
-                          backgroundImage: occ
-                              ? NetworkImage(s.user!.photo)
-                              : null,
-                          child: occ ? null : Icon(Icons.person),
-                        ),
-                        SizedBox(height: 5),
-                        Text(
-                          occ ? s.user!.name : 'খালি সিট',
-                          style: TextStyle(fontSize: 10),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          'Mic ${s.id}',
-                          style: TextStyle(fontSize: 9, color: Colors.grey),
-                        ),
-                      ],
-                    ),
+                      SizedBox(height: 4),
+                      Text(isOwnerSeat ? 'SR Voice Owner' : isEmpty ? 'খালি সিট' : 'User ${i+1}', style: TextStyle(color: isOwnerSeat ? Color(0xFFFFD700) : Colors.white70, fontSize: 9, fontWeight: isOwnerSeat ? FontWeight.bold : FontWeight.normal), textAlign: TextAlign.center, maxLines: 2),
+                      if(isOwnerSeat) Text('Mic ${i+1}', style: TextStyle(color: Colors.white38, fontSize: 8)),
+                    ],
                   ),
                 );
               },
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.all(10),
+            color: Color(0xFF2D1B4E),
+            child: Row(
+              children: [
+                Icon(Icons.mic, color: Color(0xFFFFD700)),
+                SizedBox(width: 10),
+                Expanded(child: Container(padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8), decoration: BoxDecoration(color: Color(0xFF1A0B2E), borderRadius: BorderRadius.circular(20)), child: Text(announcement, style: TextStyle(color: Colors.white54, fontSize: 12)))),
+                SizedBox(width: 10),
+                Icon(Icons.emoji_emotions, color: Colors.white54),
+                SizedBox(width: 10),
+                Icon(Icons.card_giftcard, color: Color(0xFFFFD700)),
+              ],
             ),
           ),
         ],
