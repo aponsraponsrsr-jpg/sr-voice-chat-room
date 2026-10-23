@@ -1,26 +1,39 @@
-name: Build Fast 40MB APK
+name: Build Small Split APKs
 on:
   push:
     branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
+          
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.3'
           channel: 'stable'
-      - name: Get packages
+          flutter-version: '3.24.5'
+          
+      - name: Fix gradle.properties for AndroidX
+        run: |
+          echo "org.gradle.jvmargs=-Xmx4G" > android/gradle.properties
+          echo "android.useAndroidX=true" >> android/gradle.properties
+          echo "android.enableJetifier=true" >> android/gradle.properties
+          cat android/gradle.properties
+          
+      - name: Get dependencies
         run: flutter pub get
-      - name: Build Small Split APKs
-        run: flutter build apk --release --split-per-abi
-      - name: Upload Fast APK
+        
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi --verbose
+        
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Fast-40MB-APK
-          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
