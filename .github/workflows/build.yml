@@ -1,4 +1,4 @@
-name: Build Small Split APKs
+name: build
 on:
   push:
     branches: [ main ]
@@ -13,27 +13,19 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
-          
+
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.22.0'
           channel: 'stable'
-          flutter-version: '3.24.5'
-          
-      - name: Fix gradle.properties for AndroidX
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Fix Gradle Properties
         run: |
           echo "org.gradle.jvmargs=-Xmx4G" > android/gradle.properties
           echo "android.useAndroidX=true" >> android/gradle.properties
           echo "android.enableJetifier=true" >> android/gradle.properties
-          cat android/gradle.properties
-          
-      - name: Get dependencies
-        run: flutter pub get
-        
-      - name: Build APK
-        run: flutter build apk --release --split-per-abi --verbose
-        
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          echo "android.non
