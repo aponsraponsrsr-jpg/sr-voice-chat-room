@@ -1,134 +1,198 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(SRVoiceV4());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(SRVoiceV5());
+}
 
-class SRVoiceV4 extends StatelessWidget {
+class SRVoiceV5 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(scaffoldBackgroundColor: Color(0xFF12001E)),
-      home: SRV4Room(),
+      theme: ThemeData(scaffoldBackgroundColor: Color(0xFF1a0b2e)),
+      home: AuthCheck(),
     );
   }
 }
 
-class SRV4Room extends StatefulWidget {
+// Auto Login Check
+class AuthCheck extends StatelessWidget {
   @override
-  _SRV4RoomState createState() => _SRV4RoomState();
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (snapshot.hasData) {
+          return SRV5Room(user: snapshot.data!);
+        }
+        return LoginScreen();
+      },
+    );
+  }
 }
 
-class _SRV4RoomState extends State<SRV4Room> {
-  String roomName = "SR Voice Party 🎙️";
-  String announcement = "Welcome to SR Voice - no body come to my room";
-  String roomLabel = "Friends";
-  List<bool> seats = List.generate(10, (_) => false);
-  bool isLocked = false;
-  List<String> chats = ["Hi", "Welcome"];
-  TextEditingController chatCtrl = TextEditingController();
-  String searchQuery = "";
-  double walletBalance = 1250.0;
-  String inviteCode = "SR-APON-786";
-  double inviteIncome = 345.5;
+// Login Screen - Gmail Login
+class LoginScreen extends StatelessWidget {
+  Future<void> signInWithGoogle() async {
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    if (googleUser == null) return;
+    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+    await FirebaseAuth.instance.signInWithCredential(credential);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF1A0033),
-      appBar: AppBar(
-        backgroundColor: Color(0xFF4A148C),
-        title: Row(children: [
-          Container(padding: EdgeInsets.all(6), decoration: BoxDecoration(color: Color(0xFFFFD700), borderRadius: BorderRadius.circular(8)), child: Text("SR", style: TextStyle(color: Color(0xFF4A148C), fontWeight: FontWeight.bold))),
-          SizedBox(width: 8),
-          Expanded(child: Text(roomName, style: TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis)),
-        ]),
-        actions: [
-          Icon(Icons.search, color: Color(0xFFFFD700)),
-          PopupMenuButton(
-            icon: Icon(Icons.more_vert, color: Colors.white),
-            itemBuilder: (c) => [
-              PopupMenuItem(child: Text(isLocked ? "Unlock Room" : "Lock Room"), value: "lock"),
-              PopupMenuItem(child: Text("Room Set"), value: "roomset"),
-              PopupMenuItem(child: Text("Clear Chat"), value: "clear"),
-              PopupMenuItem(child: Text("Clear Charm"), value: "clearcharm"),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [Color(0xFF1a0b2e), Color(0xFF2d1b4e)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.mic, size: 100, color: Colors.purpleAccent),
+              SizedBox(height: 20),
+              Text("SR VOICE CHAT ROOM", style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
+              Text("V5 - Online Voice App", style: TextStyle(color: Colors.white70)),
+              SizedBox(height: 50),
+              ElevatedButton.icon(
+                onPressed: signInWithGoogle,
+                icon: Icon(Icons.login),
+                label: Text("Gmail দিয়ে Login করুন"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                ),
+              ),
+              SizedBox(height: 20),
+              Text("একবার Login করলে Auto Login হবে", style: TextStyle(color: Colors.white54, fontSize: 12)),
             ],
-            onSelected: (v){
-              if(v=="lock") setState(()=> isLocked=!isLocked);
-              if(v=="roomset") openRoomSet();
-              if(v=="clear") setState(()=> chats.clear());
-            },
-          )
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// MAIN ROOM - 10 Seat + Wallet + Gift + Game
+class SRV5Room extends StatefulWidget {
+  final User user;
+  SRV5Room({required this.user});
+  @override
+  _SRV5RoomState createState() => _SRV5RoomState();
+}
+
+class _SRV5RoomState extends State<SRV5Room> {
+  List<String?> seats = List.filled(10, null);
+  int coins = 1000;
+  int selectedSeat = -1;
+
+  void takeSeat(int index) {
+    setState(() {
+      if (seats[index] == null) {
+        seats[index] = widget.user.displayName ?? "You";
+        selectedSeat = index;
+      } else if (seats[index] == widget.user.displayName) {
+        seats[index] = null;
+      }
+    });
+  }
+
+  void sendGift() {
+    if (coins >= 100) {
+      setState(() => coins -= 100);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("🎁 Gift পাঠানো হয়েছে! -100 Coin")));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(0xFF1a0b2e),
+        title: Text("SR Voice V5 - 10 Seats"),
+        actions: [
+          Chip(label: Text("💰 $coins"), backgroundColor: Colors.amber),
+          SizedBox(width: 10),
+          IconButton(onPressed: () async { await FirebaseAuth.instance.signOut(); await GoogleSignIn().signOut(); }, icon: Icon(Icons.logout)),
         ],
       ),
       body: Column(
         children: [
-          // ID / Room Search + Theme
+          // Room Info
           Container(
-            padding: EdgeInsets.all(8),
-            color: Colors.black26,
+            padding: EdgeInsets.all(15),
+            margin: EdgeInsets.all(10),
+            decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(15)),
             child: Row(
               children: [
-                Expanded(child: TextField(decoration: InputDecoration(hintText: "ID / Room Search", hintStyle: TextStyle(color: Colors.white38, fontSize: 12), prefixIcon: Icon(Icons.search, size: 18, color: Color(0xFFFFD700)), filled: true, fillColor: Color(0xFF2A0050), border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none), contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 10)), style: TextStyle(color: Colors.white, fontSize: 12), onChanged: (v)=> setState(()=> searchQuery=v))),
-                SizedBox(width: 8),
-                Container(padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: Color(0xFF4A148C), borderRadius: BorderRadius.circular(12), border: Border.all(color: Color(0xFFFFD700))), child: Text(roomLabel, style: TextStyle(color: Color(0xFFFFD700), fontSize: 10))),
-                SizedBox(width: 6),
-                Text("ID: 123456", style: TextStyle(color: Colors.white54, fontSize: 10)),
+                CircleAvatar(backgroundImage: NetworkImage(widget.user.photoURL ?? "")),
+                SizedBox(width: 10),
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(widget.user.displayName ?? "User", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  Text(widget.user.email ?? "", style: TextStyle(color: Colors.white54, fontSize: 12)),
+                ]),
+                Spacer(),
+                Icon(Icons.verified, color: Colors.greenAccent),
               ],
             ),
           ),
-          // Announcement + Chat Bubbles
-          Container(
-            height: 40,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: chats.length,
-              itemBuilder: (c,i) => Container(margin: EdgeInsets.all(4), padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: Color(0xFF4A148C).withOpacity(0.8), borderRadius: BorderRadius.circular(16)), child: Text(chats[i], style: TextStyle(color: Colors.white, fontSize: 12))),
-            ),
-          ),
-          // 10 Seats 5+5
+          // 10 Seats Grid
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF2A0050), Color(0xFF12001E)]),
-                image: DecorationImage(image: NetworkImage("https://i.ibb.co/3YQ8XzM/mosque-silhouette.png"), opacity: 0.05, fit: BoxFit.cover),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: List.generate(5, (i) => seatCircle(i))),
-                  SizedBox(height: 20),
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: List.generate(5, (i) => seatCircle(i+5))),
-                  SizedBox(height: 12),
-                  Text(announcement, style: TextStyle(color: Colors.white38, fontSize: 10), textAlign: TextAlign.center),
-                ],
-              ),
+            child: GridView.builder(
+              padding: EdgeInsets.all(15),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5, childAspectRatio: 0.8, crossAxisSpacing: 10, mainAxisSpacing: 10),
+              itemCount: 10,
+              itemBuilder: (context, index) {
+                bool isOccupied = seats[index] != null;
+                return GestureDetector(
+                  onTap: () => takeSeat(index),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isOccupied ? Colors.purple : Colors.white10,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: selectedSeat == index ? Colors.amber : Colors.transparent, width: 2),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(isOccupied ? Icons.mic : Icons.mic_off, color: Colors.white, size: 30),
+                        SizedBox(height: 5),
+                        Text("Seat ${index + 1}", style: TextStyle(color: Colors.white, fontSize: 10)),
+                        Text(seats[index] ?? "Empty", style: TextStyle(color: Colors.white70, fontSize: 8), overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
-          // Bottom Bar
+          // Bottom Actions - Gift + Game + Wallet
           Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(color: Color(0xFF2A0050), borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
-            child: Column(
+            padding: EdgeInsets.all(15),
+            decoration: BoxDecoration(color: Color(0xFF2d1b4e), borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Row(
-                  children: [
-                    Expanded(child: TextField(controller: chatCtrl, decoration: InputDecoration(hintText: "Say Hi...", hintStyle: TextStyle(color: Colors.white38, fontSize: 12), filled: true, fillColor: Colors.black26, border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none), contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8)), style: TextStyle(color: Colors.white, fontSize: 12))),
-                    IconButton(icon: Icon(Icons.send, color: Color(0xFFFFD700)), onPressed: (){ if(chatCtrl.text.isNotEmpty){ setState(()=> chats.add(chatCtrl.text)); chatCtrl.clear(); } }),
-                  ],
-                ),
-                SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    bottomItem(Icons.mic, "Mic", (){ setState(()=> seats[0]=!seats[0]); }),
-                    bottomItem(Icons.emoji_emotions, "Emoji", (){}),
-                    bottomItem(Icons.card_giftcard, "Gift", (){}),
-                    bottomItem(Icons.videogame_asset, "Game", (){}),
-                    bottomItem(Icons.wallet, "Wallet", openWallet),
-                    bottomItem(Icons.share, "Invite", openInvite),
-                    bottomItem(Icons.exit_to_app, "Exit", (){}),
-                  ],
-                ),
+                _actionBtn(Icons.card_giftcard, "Gift", Colors.pink, sendGift),
+                _actionBtn(Icons.games, "Game", Colors.blue, () => _showGames()),
+                _actionBtn(Icons.account_balance_wallet, "Wallet", Colors.amber, () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Wallet: $coins Coins")))),
+                _actionBtn(Icons.mic, "Mic", Colors.green, () {}),
               ],
             ),
           ),
@@ -137,65 +201,22 @@ class _SRV4RoomState extends State<SRV4Room> {
     );
   }
 
-  Widget seatCircle(int i){
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: () => setState(()=> seats[i]=!seats[i]),
-          child: Container(
-            width: 52, height: 52,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: seats[i] ? Color(0xFF4A148C) : Color(0xFF1E1E1E), border: Border.all(color: seats[i] ? Color(0xFFFFD700) : Colors.white24, width: 2)),
-            child: Icon(seats[i] ? Icons.mic : Icons.person, color: seats[i] ? Color(0xFFFFD700) : Colors.white30, size: 24),
-          ),
-        ),
-        SizedBox(height: 3),
-        Text("Seat ${i+1}", style: TextStyle(fontSize: 9, color: seats[i] ? Color(0xFFFFD700) : Colors.white54)),
-      ],
+  Widget _actionBtn(IconData icon, String label, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(children: [CircleAvatar(backgroundColor: color, child: Icon(icon, color: Colors.white)), SizedBox(height: 5), Text(label, style: TextStyle(color: Colors.white, fontSize: 10))]),
     );
   }
 
-  Widget bottomItem(IconData icon, String label, Function onTap){
-    return InkWell(
-      onTap: ()=> onTap(),
-      child: Column(children: [Icon(icon, color: Colors.white70, size: 20), SizedBox(height: 2), Text(label, style: TextStyle(fontSize: 8, color: Colors.white54))]),
-    );
-  }
-
-  void openWallet(){
-    showModalBottomSheet(context: context, backgroundColor: Color(0xFF1A0033), builder: (_)=> Container(padding: EdgeInsets.all(20), child: Column(mainAxisSize: MainAxisSize.min, children: [
-      Text("💰 Wallet", style: TextStyle(color: Color(0xFFFFD700), fontSize: 18, fontWeight: FontWeight.bold)),
-      SizedBox(height: 12),
-      Text("Balance: \$${walletBalance}", style: TextStyle(color: Colors.white, fontSize: 16)),
-      SizedBox(height: 10),
-      Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [Text("100K=\$0.99", style: TextStyle(color: Colors.white54, fontSize: 10)), Text("1M=\$9.99", style: TextStyle(color: Colors.white54, fontSize: 10)), Text("10M=\$99.99", style: TextStyle(color: Colors.white54, fontSize: 10))]),
-    ])));
-  }
-
-  void openInvite(){
-    showModalBottomSheet(context: context, backgroundColor: Color(0xFF1A0033), builder: (_)=> Container(padding: EdgeInsets.all(20), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text("🎁 Invite System", style: TextStyle(color: Color(0xFFFFD700), fontSize: 18, fontWeight: FontWeight.bold)),
-      SizedBox(height: 10),
-      Text("My Income: \$${inviteIncome}", style: TextStyle(color: Colors.greenAccent)),
-      SizedBox(height: 8),
-      Text("My Code: $inviteCode", style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold)),
-      SizedBox(height: 12),
-      ElevatedButton.icon(onPressed: (){}, icon: Icon(Icons.share), label: Text("Share & Invite Friends"), style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF4A148C))),
-    ])));
-  }
-
-  void openRoomSet(){
-    TextEditingController n = TextEditingController(text: roomName);
-    TextEditingController a = TextEditingController(text: announcement);
-    TextEditingController l = TextEditingController(text: roomLabel);
-    showDialog(context: context, builder: (_)=> AlertDialog(
-      backgroundColor: Color(0xFF2A0050),
-      title: Text("Room Set", style: TextStyle(color: Color(0xFFFFD700))),
-      content: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextField(controller: n, style: TextStyle(color: Colors.white), decoration: InputDecoration(labelText: "Room Name", labelStyle: TextStyle(color: Colors.white54))),
-        TextField(controller: a, style: TextStyle(color: Colors.white), decoration: InputDecoration(labelText: "Announcement", labelStyle: TextStyle(color: Colors.white54))),
-        TextField(controller: l, style: TextStyle(color: Colors.white), decoration: InputDecoration(labelText: "Label (Friends/Game/Music/Chat)", labelStyle: TextStyle(color: Colors.white54))),
+  void _showGames() {
+    showModalBottomSheet(context: context, backgroundColor: Color(0xFF1a0b2e), builder: (c) => Container(padding: EdgeInsets.all(20), child: Column(mainAxisSize: MainAxisSize.min, children: [
+      Text("🎮 Mini Games", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+      SizedBox(height: 20),
+      Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+        _gameItem("Ludo"), _gameItem("Carrom"), _gameItem("Tambola"), _gameItem("Quiz"),
       ]),
-      actions: [TextButton(onPressed: ()=> Navigator.pop(context), child: Text("Cancel")), ElevatedButton(onPressed: (){ setState(()=> {roomName=n.text, announcement=a.text, roomLabel=l.text}); Navigator.pop(context); }, child: Text("Save"), style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFFFD700), foregroundColor: Color(0xFF4A148C)))],
-    ));
+    ])));
   }
+
+  Widget _gameItem(String name) => Column(children: [CircleAvatar(child: Text(name[0])), SizedBox(height: 5), Text(name, style: TextStyle(color: Colors.white, fontSize: 12))]);
 }
