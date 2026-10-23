@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Fast 40MB APK
 on:
   push:
     branches: [ main ]
@@ -15,13 +15,12 @@ jobs:
         with:
           flutter-version: '3.22.3'
           channel: 'stable'
-      - name: Fix Old Gradle Project
-        run: |
-          rm -rf android
-          flutter create . --platforms=android --org com.example --project-name sr_voice_chat_room
-      - run: flutter pub get
-      - run: flutter build apk --release
-      - uses: actions/upload-artifact@v4
+      - name: Get packages
+        run: flutter pub get
+      - name: Build Small Split APKs
+        run: flutter build apk --release --split-per-abi --obfuscate --split-debug-info=./symbols --tree-shake-icons
+      - name: Upload Fast APK
+        uses: actions/upload-artifact@v4
         with:
-          name: release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: Fast-40MB-APK
+          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
