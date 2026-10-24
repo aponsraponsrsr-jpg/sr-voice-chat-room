@@ -9,8 +9,7 @@
         android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <application
         android:label="SR Voice Chat Room"
-        android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:name="${applicationName}">
         <activity
             android:name=".MainActivity"
             android:exported="true"
