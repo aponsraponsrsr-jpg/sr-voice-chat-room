@@ -27,7 +27,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig = flutter.buildTypes.release.signingConfig
+            signingConfig = signingConfigs.debug
         }
     }
 }
