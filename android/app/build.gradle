@@ -5,18 +5,27 @@ plugins {
 }
 
 def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
+def localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader ->
+    localPropertiesFile.withReader("UTF-8") { reader ->
         localProperties.load(reader)
     }
 }
 
-def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
-if (flutterVersionCode == null) { flutterVersionCode = '1' }
+def flutterRoot = localProperties.getProperty("flutter.sdk")
+if (flutterRoot == null) {
+    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
+}
 
-def flutterVersionName = localProperties.getProperty('flutter.versionName')
-if (flutterVersionName == null) { flutterVersionName = '1.0' }
+def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
+if (flutterVersionCode == null) {
+    flutterVersionCode = "1"
+}
+
+def flutterVersionName = localProperties.getProperty("flutter.versionName")
+if (flutterVersionName == null) {
+    flutterVersionName = "1.0"
+}
 
 android {
     namespace = "com.example.sr_voice_chat_room"
@@ -46,7 +55,9 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.debug
+            minifyEnabled true
+            shrinkResources true
+            signingConfig = signingConfigs.release
         }
     }
 }
