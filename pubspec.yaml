@@ -1,9 +1,11 @@
 name: sr_voice_chat_room
-description: SR Voice Chat Room - Online Voice Chat App with Wallet
+description: SR Voice Chat Room - Online
 publish_to: 'none'
 version: 1.0.0+1
+
 environment:
   sdk: '>=3.0.0 <4.0.0'
+
 dependencies:
   flutter:
     sdk: flutter
@@ -16,10 +18,11 @@ dependencies:
   permission_handler: ^11.0.1
   provider: ^6.1.1
   lottie: ^2.7.0
-  
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
+
 flutter:
   uses-material-design: true
