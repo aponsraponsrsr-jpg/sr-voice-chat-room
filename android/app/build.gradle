@@ -29,7 +29,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace = "com.example.sr_voice_chat_room"
+    namespace = "com.example.sr_voice_chat_room_v2"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -47,7 +47,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.sr_voice_chat_room"
+        applicationId = "com.example.sr_voice_chat_room_v2"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
