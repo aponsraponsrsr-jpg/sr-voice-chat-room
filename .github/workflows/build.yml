@@ -5,35 +5,35 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+    build:
+      runs-on: ubuntu-latest
 
-    env:
-      GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx2048m
-      JAVA_OPTS: -Xmx2048m
+      env:
+        GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx2048m
+        JAVA_OPTS: -Xmx2048m
 
-    steps:
-      - uses: actions/checkout@v4
+      steps:
+        - uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+        - name: Setup Java
+          uses: actions/setup-java@v4
+          with:
+            distribution: 'temurin'
+            java-version: '17'
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
+        - name: Setup Flutter
+          uses: subosito/flutter-action@v2
+          with:
+            channel: 'stable'
 
-      - name: Install Dependencies
-        run: flutter pub get
+        - name: Install Dependencies
+          run: flutter pub get
 
-      - name: Build Split APKs
-        run: flutter build apk --release --split-per-abi --android-skip-build-dependency-validation
+        - name: Build APK (Universal Release)
+          run: flutter build apk --release --android-skip-build-dependency-validation
 
-      - name: Upload APK Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: SR-Voice-APK
-          path: build/app/outputs/flutter-apk/*.apk
+        - name: Upload APK Artifacts
+          uses: actions/upload-artifact@v4
+          with:
+            name: SR-Voice-APK-Release
+            path: build/app/outputs/flutter-apk/*.apk
