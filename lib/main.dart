@@ -6,7 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint("Firebase Initialization Error: $e");
+  }
   runApp(SRVoiceV5());
 }
 
@@ -29,9 +33,12 @@ class AuthCheck extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(body: Center(child: CircularProgressIndicator()));
+          return Scaffold(
+            backgroundColor: Color(0xFF1a0b2e),
+            body: Center(child: CircularProgressIndicator(color: Colors.purpleAccent)),
+          );
         }
-        if (snapshot.hasData) {
+        if (snapshot.hasData && snapshot.data != null) {
           return SRV5Room(user: snapshot.data!);
         }
         return LoginScreen();
@@ -40,17 +47,35 @@ class AuthCheck extends StatelessWidget {
   }
 }
 
-// Login Screen - Gmail Login
-class LoginScreen extends StatelessWidget {
-  Future<void> signInWithGoogle() async {
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-    if (googleUser == null) return;
-    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-    await FirebaseAuth.instance.signInWithCredential(credential);
+// Login Screen - Gmail Login with Crash Safety
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  bool _isLoading = false;
+
+  Future<void> signInWithGoogle(BuildContext context) async {
+    setState(() => _isLoading = true);
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      await FirebaseAuth.instance.signInWithCredential(credential);
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Login Failed: ${e.toString()}"), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -58,31 +83,37 @@ class LoginScreen extends StatelessWidget {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [Color(0xFF1a0b2e), Color(0xFF2d1b4e)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+          gradient: LinearGradient(
+            colors: [Color(0xFF1a0b2e), Color(0xFF2d1b4e)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.mic, size: 100, color: Colors.purpleAccent),
-              SizedBox(height: 20),
-              Text("SR VOICE CHAT ROOM", style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
-              Text("V5 - Online Voice App", style: TextStyle(color: Colors.white70)),
-              SizedBox(height: 50),
-              ElevatedButton.icon(
-                onPressed: signInWithGoogle,
-                icon: Icon(Icons.login),
-                label: Text("Gmail দিয়ে Login করুন"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+          child: _isLoading
+              ? CircularProgressIndicator(color: Colors.white)
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.mic, size: 100, color: Colors.purpleAccent),
+                    SizedBox(height: 20),
+                    Text("SR VOICE CHAT ROOM", style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
+                    Text("V5 - Online Voice App", style: TextStyle(color: Colors.white70)),
+                    SizedBox(height: 50),
+                    ElevatedButton.icon(
+                      onPressed: () => signInWithGoogle(context),
+                      icon: Icon(Icons.login),
+                      label: Text("Gmail দিয়ে Login করুন"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Text("একবার Login করলে Auto Login হবে", style: TextStyle(color: Colors.white54, fontSize: 12)),
+                  ],
                 ),
-              ),
-              SizedBox(height: 20),
-              Text("একবার Login করলে Auto Login হবে", style: TextStyle(color: Colors.white54, fontSize: 12)),
-            ],
-          ),
         ),
       ),
     );
@@ -129,7 +160,13 @@ class _SRV5RoomState extends State<SRV5Room> {
         actions: [
           Chip(label: Text("💰 $coins"), backgroundColor: Colors.amber),
           SizedBox(width: 10),
-          IconButton(onPressed: () async { await FirebaseAuth.instance.signOut(); await GoogleSignIn().signOut(); }, icon: Icon(Icons.logout)),
+          IconButton(
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              await GoogleSignIn().signOut();
+            },
+            icon: Icon(Icons.logout),
+          ),
         ],
       ),
       body: Column(
